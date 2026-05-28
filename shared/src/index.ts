@@ -157,3 +157,6 @@ export {
 } from "./engine/rules";
 
 export type { GameResult } from "./engine/rules";
+
+export { parseFen, toFen, INITIAL_FEN } from "./engine/fen";
+export type { FenData } from "./engine/fen";

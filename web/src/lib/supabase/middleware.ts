@@ -37,8 +37,18 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refreshes the auth token — IMPORTANT: do not remove.
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Protected routes — redirect to home if not logged in
+  const protectedPaths = ["/review", "/analysis"];
+  const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p));
+
+  if (isProtected && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.searchParams.set("login", "required");
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }

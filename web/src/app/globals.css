@@ -65,6 +65,11 @@ textarea {
   border-radius: 4px;
 }
 
+textarea:focus-visible,
+input:focus-visible {
+  outline: none;
+}
+
 /* ---- Premium scrollbar ---- */
 ::-webkit-scrollbar {
   width: 6px;
