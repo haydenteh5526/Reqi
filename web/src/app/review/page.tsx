@@ -13,6 +13,7 @@ import { GameImport } from "@/components/review/GameImport";
 import { ShareButton } from "@/components/review/ShareButton";
 import { ThemeSelector } from "@/components/review/ThemeSelector";
 import { convertGameToChineseNotation } from "@/lib/engine/chinese-notation";
+import { getOpeningName } from "@/lib/engine/opening-book";
 import { playMoveSound, playAnalysisCompleteSound } from "@/lib/sounds";
 import { DEFAULT_BOARD_THEME, type BoardTheme } from "@/lib/board-themes";
 import type { Position } from "@xiangqi/shared";
@@ -43,6 +44,7 @@ export default function ReviewPage() {
   const classification = review.currentMoveAnalysis?.classification ?? null;
 
   const notations = review.game ? convertGameToChineseNotation(review.game.moves) : undefined;
+  const openingName = review.game ? getOpeningName(review.game.moves) : null;
 
   // ── Idle: PGN input screen ─────────────────────────────────────────────────
   if (review.status === "idle") {
@@ -151,6 +153,13 @@ export default function ReviewPage() {
 
           {/* Right Panel */}
           <div className="flex flex-col w-full lg:w-[300px] max-h-[400px] lg:max-h-none lg:ml-3 bg-[#262421] rounded-lg overflow-hidden shadow-xl border border-white/[0.04]">
+            {/* Opening name */}
+            {openingName && (
+              <div className="px-3 py-2 border-b border-white/[0.06] text-xs text-[#a88b65] font-medium">
+                📖 {openingName}
+              </div>
+            )}
+
             {/* Toolbar */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06]">
               <ThemeSelector current={theme} onChange={setTheme} />
