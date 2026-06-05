@@ -7,7 +7,7 @@ import { InteractiveBoard } from "@/components/board/InteractiveBoard";
 import { EvalBar } from "@/components/review/EvalBar";
 import { BoardOverlays } from "@/components/review/BoardOverlays";
 import { ThemeSelector } from "@/components/review/ThemeSelector";
-import { playMoveSound } from "@/lib/sounds";
+import { playMoveSound, playCaptureSound, playUndoSound } from "@/lib/sounds";
 import { DEFAULT_BOARD_THEME, type BoardTheme } from "@/lib/board-themes";
 import { RotateCcw, Undo2, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -16,14 +16,20 @@ export default function AnalysisPage() {
   const [theme, setTheme] = useState<BoardTheme>(DEFAULT_BOARD_THEME);
 
   // Play sound on move
-  useEffect(() => { if (analysis.moves.length > 0) playMoveSound(); }, [analysis.moves.length]);
+  useEffect(() => {
+    if (analysis.moves.length > 0) {
+      if (analysis.checkSide) playMoveSound(); // check sound handled below
+      else if (analysis.lastMoveWasCapture) playCaptureSound();
+      else playMoveSound();
+    }
+  }, [analysis.moves.length]);
 
   // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") { e.preventDefault(); analysis.goBack(); }
       else if (e.key === "ArrowRight") { e.preventDefault(); analysis.goForward(); }
-      else if (e.key === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); analysis.undo(); }
+      else if (e.key === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); analysis.undo(); playUndoSound(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -32,7 +38,7 @@ export default function AnalysisPage() {
   const isLive = analysis.currentIndex === analysis.moves.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#1a1816]">
+    <div className="h-[calc(100vh-44px)] flex flex-col bg-[#1a1816] overflow-hidden">
       {/* Header */}
       <header className="px-6 py-3 border-b border-white/[0.04] flex items-center gap-4">
         <h1 className="text-lg font-bold text-[#e8e6e3]">Analysis Board</h1>
@@ -70,7 +76,7 @@ export default function AnalysisPage() {
             {analysis.bestMoveArrow && isLive && (
               <BoardOverlays
                 bestMove={analysis.bestMoveArrow}
-                classification="best"
+                classification={null}
                 playedMove={null}
               />
             )}
@@ -78,22 +84,31 @@ export default function AnalysisPage() {
 
           {/* Right panel */}
           <div className="flex flex-col w-[280px] ml-3 bg-[#262421] rounded-lg overflow-hidden shadow-xl border border-white/[0.04]">
-            {/* Eval info */}
-            <div className="p-4 border-b border-white/[0.06]">
-              <div className="text-xs text-[#8b8784] mb-1">Engine Evaluation</div>
-              {analysis.evaluation ? (
-                <div className="text-xl font-bold text-[#e8e6e3]">
-                  {analysis.evaluation.score.type === "mate"
-                    ? `M${Math.abs(analysis.evaluation.score.value)}`
-                    : `${analysis.evaluation.score.value >= 0 ? "+" : ""}${(analysis.evaluation.score.value / 100).toFixed(2)}`
-                  }
+            {/* Engine header */}
+            <div className="px-4 py-3 border-b border-white/[0.06] bg-[#1e1c1a]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full bg-green-500 ${analysis.isAnalyzing ? "animate-pulse" : ""}`} />
+                  <span className="text-xs text-[#8b8784] uppercase tracking-wide font-medium">Fairy Stockfish</span>
                 </div>
-              ) : (
-                <div className="text-xl font-bold text-[#5a5654]">—</div>
-              )}
+                <span className="text-lg font-bold font-mono text-[#e8e6e3]">
+                  {analysis.evaluation
+                    ? analysis.evaluation.score.type === "mate"
+                      ? `M${Math.abs(analysis.evaluation.score.value)}`
+                      : `${analysis.evaluation.score.value >= 0 ? "+" : ""}${(analysis.evaluation.score.value / 100).toFixed(2)}`
+                    : "0.00"
+                  }
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[10px] text-[#8b8784]/50">Depth {analysis.evaluation?.depth ?? 0}</span>
+                {analysis.evaluation?.bestMove && (
+                  <span className="text-[10px] text-[#8b8784]/50">Best: {analysis.evaluation.bestMove}</span>
+                )}
+              </div>
               {analysis.evaluation?.bestLine && analysis.evaluation.bestLine.length > 0 && (
                 <div className="mt-2 text-[11px] font-mono text-[#8b8784] truncate">
-                  Best: {analysis.evaluation.bestLine.slice(0, 6).join(" ")}
+                  {analysis.evaluation.bestLine.slice(0, 8).join(" ")}
                 </div>
               )}
             </div>
@@ -135,7 +150,7 @@ export default function AnalysisPage() {
             <div className="flex items-center justify-between py-3 px-3 border-t border-white/[0.06]">
               <ThemeSelector current={theme} onChange={setTheme} />
               <div className="flex gap-1">
-                <CtrlBtn onClick={analysis.undo} label="Undo (Ctrl+Z)"><Undo2 size={16} /></CtrlBtn>
+                <CtrlBtn onClick={() => { analysis.undo(); playUndoSound(); }} label="Undo (Ctrl+Z)"><Undo2 size={16} /></CtrlBtn>
                 <CtrlBtn onClick={analysis.goBack} label="Back"><ChevronLeft size={16} /></CtrlBtn>
                 <CtrlBtn onClick={analysis.goForward} label="Forward"><ChevronRight size={16} /></CtrlBtn>
                 <CtrlBtn onClick={analysis.reset} label="Reset"><RotateCcw size={16} /></CtrlBtn>

@@ -40,10 +40,11 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes — redirect to home if not logged in
+  // Disabled in dev when NEXT_PUBLIC_SUPABASE_URL is not set properly
   const protectedPaths = ["/review", "/analysis"];
   const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p));
 
-  if (isProtected && !user) {
+  if (isProtected && !user && supabaseUrl !== "https://your-project.supabase.co") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.searchParams.set("login", "required");

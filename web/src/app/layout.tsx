@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Xiangqi.app — Play Chinese Chess Online",
+  title: "Reqi — Xiangqi Game Review & Analysis",
   description:
-    "A premium, real-time multiplayer platform for Chinese Chess (Xiangqi). Play, learn, and compete.",
+    "Analyze your Xiangqi (Chinese Chess) games with engine evaluation. Move classifications, accuracy scores, and interactive analysis.",
 };
 
 export default function RootLayout({
@@ -26,6 +26,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#b83a30" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >

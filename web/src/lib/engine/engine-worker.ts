@@ -1,6 +1,5 @@
 // =============================================================================
 // Engine Web Worker — Loads Fairy Stockfish WASM, speaks UCI via postMessage
-// Place fairy-stockfish.js and fairy-stockfish.wasm in public/engine/
 // =============================================================================
 /// <reference lib="webworker" />
 
@@ -17,14 +16,14 @@ function post(msg: WorkerOutMessage) {
 // ── Load the WASM engine ─────────────────────────────────────────────────────
 
 async function init() {
-  // Load the fairy-stockfish glue script dynamically
-  const response = await fetch("/engine/fairy-stockfish.js");
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
+  // Load the stockfish.js script which defines `Stockfish` as a global factory
+  const base = self.location.origin;
+  importScripts(`${base}/engine/stockfish.js`);
 
-  // The glue script exposes a factory function
-  const module = await import(/* webpackIgnore: true */ url);
-  engine = await module.default();
+  // Stockfish is now a global factory function — pass locateFile so it finds the .wasm
+  engine = await (self as any).Stockfish({
+    locateFile: (file: string) => `${base}/engine/${file}`,
+  });
 
   engine!.addMessageListener((line: string) => {
     handleUciLine(line);
@@ -109,6 +108,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     case "analyze":
       currentId = msg.id;
       evals = [];
+      send("stop");
       send(`position fen ${msg.fen}`);
       send(`go depth ${msg.depth}`);
       break;
@@ -116,6 +116,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     case "analyzeWithMoves":
       currentId = msg.id;
       evals = [];
+      send("stop");
       send(
         msg.moves.length
           ? `position fen ${msg.fen} moves ${msg.moves.join(" ")}`

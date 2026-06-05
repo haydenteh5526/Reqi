@@ -14,7 +14,7 @@ import { ShareButton } from "@/components/review/ShareButton";
 import { ThemeSelector } from "@/components/review/ThemeSelector";
 import { convertGameToChineseNotation } from "@/lib/engine/chinese-notation";
 import { getOpeningName } from "@/lib/engine/opening-book";
-import { playMoveSound, playAnalysisCompleteSound } from "@/lib/sounds";
+import { playMoveSound, playCaptureSound, playAnalysisCompleteSound } from "@/lib/sounds";
 import { DEFAULT_BOARD_THEME, type BoardTheme } from "@/lib/board-themes";
 import type { Position } from "@xiangqi/shared";
 import { Loader2 } from "lucide-react";
@@ -27,7 +27,21 @@ export default function ReviewPage() {
   useEffect(() => () => review.destroy(), []);
 
   // Play sound on move navigation
-  useEffect(() => { if (review.currentIndex > 0) playMoveSound(); }, [review.currentIndex]);
+  useEffect(() => {
+    if (review.currentIndex > 0 && review.game) {
+      const moveAnalysis = review.review?.moves[review.currentIndex - 1];
+      // If this move was a capture (eval changed significantly or we detect it from boards)
+      // Simple heuristic: play capture if the board has fewer pieces
+      const prevBoard = review.boards?.[review.currentIndex - 1];
+      const curBoard = review.boards?.[review.currentIndex];
+      if (prevBoard && curBoard) {
+        const prevCount = prevBoard.flat().filter(Boolean).length;
+        const curCount = curBoard.flat().filter(Boolean).length;
+        if (curCount < prevCount) { playCaptureSound(); return; }
+      }
+      playMoveSound();
+    }
+  }, [review.currentIndex]);
   // Play chime when analysis completes
   useEffect(() => { if (review.status === "done") playAnalysisCompleteSound(); }, [review.status]);
 
@@ -49,7 +63,7 @@ export default function ReviewPage() {
   // ── Idle: PGN input screen ─────────────────────────────────────────────────
   if (review.status === "idle") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#1a1816]">
+      <div className="h-[calc(100vh-44px)] flex items-center justify-center p-4 bg-[#1a1816]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,7 +85,7 @@ export default function ReviewPage() {
   // ── Error state ─────────────────────────────────────────────────────────────
   if (review.status === "error") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#1a1816]">
+      <div className="h-[calc(100vh-44px)] flex items-center justify-center p-4 bg-[#1a1816]">
         <div className="w-full max-w-md bg-[#262421] rounded-xl p-6 space-y-4 shadow-2xl border border-white/[0.04] text-center">
           <div className="text-[#ca3431] text-lg font-bold">Analysis Failed</div>
           <p className="text-sm text-[#8b8784]">{review.error}</p>
@@ -88,7 +102,7 @@ export default function ReviewPage() {
 
   // ── Main review layout ─────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col bg-[#1a1816]">
+    <div className="h-[calc(100vh-44px)] flex flex-col bg-[#1a1816] overflow-hidden">
       {/* Top progress bar */}
       <AnimatePresence>
         {isAnalyzing && (

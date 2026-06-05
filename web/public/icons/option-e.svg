@@ -1,0 +1,13 @@
+<!-- Option E: Two pieces with analysis arrow between them -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a1816"/>
+  <!-- Red piece -->
+  <circle cx="170" cy="256" r="90" fill="#c4473b" stroke="#9e3830" stroke-width="6"/>
+  <text x="170" y="284" text-anchor="middle" font-size="90" font-family="serif" font-weight="bold" fill="#f5e8e0">將</text>
+  <!-- Black piece -->
+  <circle cx="370" cy="256" r="70" fill="#2d2d2d" stroke="#4a4a4a" stroke-width="6" opacity="0.5"/>
+  <text x="370" y="280" text-anchor="middle" font-size="70" font-family="serif" font-weight="bold" fill="#e8e0d0" opacity="0.5">帥</text>
+  <!-- Green arrow -->
+  <line x1="230" y1="180" x2="320" y2="180" stroke="#81b64c" stroke-width="8" stroke-linecap="round"/>
+  <polygon points="320,165 345,180 320,195" fill="#81b64c"/>
+</svg>

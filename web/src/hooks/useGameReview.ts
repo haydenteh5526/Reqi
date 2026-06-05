@@ -66,41 +66,44 @@ export function useGameReview() {
 
     setState((s) => ({ ...s, status: "analyzing", error: null }));
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 120_000); // 2 min timeout
+    // Try server first, fall back to WASM
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/analysis/game`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moves: g.moves, depth }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+    if (apiUrl) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 120_000);
 
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new Error(body || `Server error (${res.status})`);
+        const res = await fetch(`${apiUrl}/analysis/game`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moves: g.moves, depth }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error(`Server error (${res.status})`);
+        const review: GameReviewResult = await res.json();
+        setState((s) => ({ ...s, status: "done", review, progress: { done: g.moves.length, total: g.moves.length } }));
+        return;
+      } catch {
+        // Server unavailable — fall through to WASM
       }
-      const review: GameReviewResult = await res.json();
+    }
+
+    // WASM engine (works without server)
+    try {
+      const engine = new EngineClient();
+      await engine.init();
+      const review = await engine.reviewGame(g.moves, {
+        depth: Math.min(depth, 14),
+        onProgress: (done, total) => setState((s) => ({ ...s, progress: { done, total } })),
+      });
+      engine.destroy();
       setState((s) => ({ ...s, status: "done", review, progress: { done: g.moves.length, total: g.moves.length } }));
     } catch (e: unknown) {
-      // Fallback to client-side WASM engine
-      try {
-        const engine = new EngineClient();
-        await engine.init();
-        const review = await engine.reviewGame(g.moves, {
-          depth: Math.min(depth, 12), // lower depth for WASM
-          onProgress: (done, total) => setState((s) => ({ ...s, progress: { done, total } })),
-        });
-        engine.destroy();
-        setState((s) => ({ ...s, status: "done", review, progress: { done: g.moves.length, total: g.moves.length } }));
-      } catch (wasmErr: unknown) {
-        const msg = e instanceof Error
-          ? e.name === "AbortError" ? "Analysis timed out. Try fewer moves or lower depth." : e.message
-          : "Analysis failed";
-        setState((s) => ({ ...s, status: "error", error: msg }));
-      }
+      const msg = e instanceof Error ? e.message : "Analysis failed";
+      setState((s) => ({ ...s, status: "error", error: msg }));
     }
   }, [state.game]);
 

@@ -1,24 +1,27 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Swords, FlaskConical, Home } from "lucide-react";
+import { BarChart3, FlaskConical } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
   { href: "/review", label: "Game Review", icon: BarChart3 },
-  { href: "/analysis", label: "Analysis", icon: FlaskConical },
-  { href: "/play", label: "Play", icon: Swords },
+  { href: "/analysis", label: "Analysis Board", icon: FlaskConical },
 ];
 
 export function TopNav() {
   const pathname = usePathname();
 
+  useEffect(() => {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+  }, []);
+
   return (
     <nav className="bg-[#262421] border-b border-white/[0.04] px-4 py-0 flex items-center gap-1 h-11 shrink-0">
       {/* Logo */}
       <Link href="/" className="text-sm font-bold text-[#e8e6e3] mr-4 tracking-tight">
-        Xiangqi<span className="text-[#81b64c]">.app</span>
+        Re<span className="text-[#b83a30]">qi</span>
       </Link>
 
       {/* Nav links */}

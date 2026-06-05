@@ -44,7 +44,7 @@ const SVG_W = (9 - 1) * CELL + PAD * 2;
 const SVG_H = (10 - 1) * CELL + PAD * 2;
 
 export function BoardOverlays({ classification, playedMove, bestMove }: BoardOverlaysProps) {
-  const showBestArrow = bestMove && classification && classification !== "best" && classification !== "excellent" && classification !== "good";
+  const showBestArrow = !!bestMove;
   const playedColor = classification ? CLASSIFICATION_COLORS[classification] : "#81b64c";
   const icon = classification ? CLASSIFICATION_ICON[classification] : "";
   const iconColor = classification ? CLASSIFICATION_COLORS[classification] : "";
