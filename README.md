@@ -4,9 +4,9 @@
   <p><strong>Xiangqi game review & analysis tool</strong></p>
   <p>Analyze your Chinese Chess games with engine-powered move classifications, accuracy scores, and interactive analysis.</p>
 
-  ![License](https://img.shields.io/github/license/haydenteh5526/Reqi)
-  ![Last Commit](https://img.shields.io/github/last-commit/haydenteh5526/Reqi)
-  ![Top Language](https://img.shields.io/github/languages/top/haydenteh5526/Reqi)
+  ![License](https://img.shields.io/github/license/haydenteh5526/Reqi?v=1)
+  ![Last Commit](https://img.shields.io/github/last-commit/haydenteh5526/Reqi?v=1)
+  ![Top Language](https://img.shields.io/github/languages/top/haydenteh5526/Reqi?v=1)
 </div>
 
 ---
