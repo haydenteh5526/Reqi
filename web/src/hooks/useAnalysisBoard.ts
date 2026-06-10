@@ -88,7 +88,7 @@ export function useAnalysisBoard(depth = 16) {
 
         // Try server first (fast, always available if running)
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api";
           const res = await fetch(`${apiUrl}/analysis/position`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

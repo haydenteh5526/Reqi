@@ -67,7 +67,7 @@ export function useGameReview() {
     setState((s) => ({ ...s, status: "analyzing", error: null }));
 
     // Try server first, fall back to WASM
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
     if (apiUrl) {
       try {
