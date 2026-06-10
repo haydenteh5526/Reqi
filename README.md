@@ -7,6 +7,8 @@
   ![License](https://img.shields.io/github/license/haydenteh5526/Reqi?v=1)
   ![Last Commit](https://img.shields.io/github/last-commit/haydenteh5526/Reqi?v=1)
   ![Top Language](https://img.shields.io/github/languages/top/haydenteh5526/Reqi?v=1)
+
+  **[Live Demo →](https://reqi-mu.vercel.app/)**
 </div>
 
 ---
