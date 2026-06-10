@@ -1,0 +1,12 @@
+{
+  "name": "Reqi",
+  "short_name": "Reqi",
+  "description": "Xiangqi game review and analysis tool",
+  "start_url": "/review",
+  "display": "standalone",
+  "background_color": "#1a1816",
+  "theme_color": "#b83a30",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

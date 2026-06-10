@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+/* ============================================================
+   Xiangqi.app — Global Dark Theme
+   Strict dark mode. No light mode variant.
+   ============================================================ */
+
+:root {
+  /* --- Backgrounds --- */
+  --background: #312e2b;
+  --background-panel: #262421;
+  --background-surface: #21201d;
+
+  /* --- Text --- */
+  --foreground: #e8e6e3;
+  --foreground-secondary: #a09b96;
+  --foreground-muted: #6b6762;
+
+  /* --- Accent (traditional red) --- */
+  --accent: #a3262a;
+  --accent-hover: #b83135;
+  --accent-muted: #8b2024;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-panel: var(--background-panel);
+  --color-background-surface: var(--background-surface);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-muted: var(--foreground-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ---- Base body ---- */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Global smooth transitions on interactive elements ---- */
+button,
+a,
+input,
+select,
+textarea {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Focus ring (keyboard only) ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+textarea:focus-visible,
+input:focus-visible {
+  outline: none;
+}
+
+/* ---- Premium scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+/* ---- Selection highlight ---- */
+::selection {
+  background: var(--accent);
+  color: var(--foreground);
+}
