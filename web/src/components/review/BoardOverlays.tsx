@@ -55,10 +55,9 @@ export function BoardOverlays({ classification, playedMove, bestMove }: BoardOve
   return (
     <>
       <svg
-        className="absolute inset-0 pointer-events-none"
-        width={SVG_W}
-        height={SVG_H}
+        className="absolute inset-0 pointer-events-none w-full h-full"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <marker id="arrow-best" markerWidth="3.5" markerHeight="3.5" refX="2" refY="1.75" orient="auto">

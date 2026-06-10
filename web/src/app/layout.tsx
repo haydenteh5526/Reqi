@@ -34,6 +34,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
       </head>
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <TopNav />

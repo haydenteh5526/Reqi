@@ -6,7 +6,7 @@
 // last-move highlight, check indicator, coordinates, and board themes.
 // =============================================================================
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { BoardState, Position, Side, PieceType } from "@xiangqi/shared";
 import { pieceChar, getLegalMoves } from "@xiangqi/shared";
 import type { BoardTheme } from "@/lib/board-themes";
@@ -97,14 +97,78 @@ export function InteractiveBoard({
     [onSelectSquare, disabled],
   );
 
+  // ── Drag and drop ──────────────────────────────────────────────────
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [dragging, setDragging] = useState<{ col: number; row: number; x: number; y: number } | null>(null);
+
+  const getSvgCoords = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    let clientX: number, clientY: number;
+    if ("touches" in e) {
+      const touch = e.touches[0] || (e as any).changedTouches?.[0];
+      if (!touch) return null;
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    const scaleX = SVG_W / rect.width;
+    const scaleY = SVG_H / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }, []);
+
+  const posFromCoords = useCallback((x: number, y: number) => {
+    const col = Math.round((x - PAD) / CELL);
+    const row = Math.round((y - PAD) / CELL);
+    if (col < 0 || col > 8 || row < 0 || row > 9) return null;
+    return { col, row };
+  }, []);
+
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent, col: number, row: number) => {
+    if (disabled) return;
+    const piece = board[row]?.[col];
+    if (!piece) return;
+    const coords = getSvgCoords(e);
+    if (!coords) return;
+    // Select the piece
+    onSelectSquare({ col, row } as Position);
+    setDragging({ col, row, x: coords.x, y: coords.y });
+  }, [disabled, board, getSvgCoords, onSelectSquare]);
+
+  const handleDragMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!dragging) return;
+    const coords = getSvgCoords(e);
+    if (coords) setDragging((d) => d ? { ...d, x: coords.x, y: coords.y } : null);
+  }, [dragging, getSvgCoords]);
+
+  const handleDragEnd = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!dragging) return;
+    const coords = getSvgCoords(e);
+    if (coords) {
+      const target = posFromCoords(coords.x, coords.y);
+      if (target && (target.col !== dragging.col || target.row !== dragging.row)) {
+        onSelectSquare(target as Position);
+      }
+    }
+    setDragging(null);
+  }, [dragging, getSvgCoords, posFromCoords, onSelectSquare]);
+
   return (
-    <div className="inline-block rounded-xl shadow-2xl shadow-black/40">
+    <div className="inline-block rounded-xl shadow-2xl shadow-black/40 h-full">
       <svg
-        width={SVG_W}
-        height={SVG_H}
+        ref={svgRef}
+        width="100%"
+        height="100%"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="select-none rounded-xl"
-        style={{ maxHeight: "calc(100vh - 40px)" }}
+        className="select-none rounded-xl h-full w-auto"
+        onMouseMove={handleDragMove}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
       >
         <defs>
           <radialGradient id="ib-bg" cx="50%" cy="50%" r="70%">
@@ -255,7 +319,10 @@ export function InteractiveBoard({
               <g
                 key={`p-${col}-${row}`}
                 filter={isSelected ? "url(#ib-glow-select)" : "url(#ib-piece-shadow)"}
-                style={{ cursor: disabled ? "default" : "pointer" }}
+                style={{ cursor: disabled ? "default" : "grab" }}
+                opacity={dragging?.col === col && dragging?.row === row ? 0.4 : 1}
+                onMouseDown={(e) => handleDragStart(e, col, row)}
+                onTouchStart={(e) => handleDragStart(e, col, row)}
               >
                 {/* Piece disc */}
                 <circle
@@ -319,6 +386,22 @@ export function InteractiveBoard({
             pointerEvents="none"
           />
         )}
+
+        {/* Dragged piece ghost */}
+        {dragging && (() => {
+          const piece = board[dragging.row]?.[dragging.col];
+          if (!piece) return null;
+          const colors = piece.side === "red" ? theme.redPiece : theme.blackPiece;
+          return (
+            <g style={{ pointerEvents: "none" }}>
+              <circle cx={dragging.x} cy={dragging.y} r={PIECE_R} fill={colors.fill} stroke={colors.stroke} strokeWidth={2} opacity={0.9} />
+              <circle cx={dragging.x} cy={dragging.y} r={PIECE_R - 4} fill="none" stroke={colors.innerRing} strokeWidth={1} />
+              <text x={dragging.x} y={dragging.y + 1} textAnchor="middle" dominantBaseline="central" fill={colors.text} fontSize="22" fontWeight="bold" fontFamily="'KaiTi', 'STKaiti', 'SimSun', serif">
+                {pieceChar(piece.type, piece.side)}
+              </text>
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );

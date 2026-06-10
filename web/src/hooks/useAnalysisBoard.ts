@@ -29,11 +29,12 @@ interface AnalysisState {
   bestMoveArrow: { from: Position; to: Position } | null;
   // History navigation
   currentIndex: number; // moves.length = live position
+  analysisVersion: number; // increments to force re-analysis
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useAnalysisBoard() {
+export function useAnalysisBoard(depth = 16) {
   const [state, setState] = useState<AnalysisState>({
     board: createInitialBoard(),
     turn: "red",
@@ -47,6 +48,7 @@ export function useAnalysisBoard() {
     isAnalyzing: false,
     bestMoveArrow: null,
     currentIndex: 0,
+    analysisVersion: 0,
   });
 
   const abortRef = useRef<AbortController | null>(null);
@@ -75,7 +77,7 @@ export function useAnalysisBoard() {
 
   useEffect(() => {
     let cancelled = false;
-    setState((s) => ({ ...s, isAnalyzing: true }));
+    setState((s) => ({ ...s, isAnalyzing: true, evaluation: null, bestMoveArrow: null }));
 
     const run = async () => {
       const uciMoves = state.moves.slice(0, state.currentIndex).map((m) => posToUci(m.from, m.to));
@@ -90,14 +92,14 @@ export function useAnalysisBoard() {
           const res = await fetch(`${apiUrl}/analysis/position`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fen, moves: uciMoves.length > 0 ? uciMoves : undefined, depth: 16 }),
+            body: JSON.stringify({ fen, moves: uciMoves.length > 0 ? uciMoves : undefined, depth }),
           });
           if (res.ok) data = await res.json();
         } catch {}
 
         // Fallback to WASM
         if (!data && engineReady && engineRef.current) {
-          data = await engineRef.current.analyzePosition(fen, 18, (ev) => {
+          data = await engineRef.current.analyzePosition(fen, depth, (ev) => {
             if (cancelled) return;
             const bestArrow = ev.pv[0] ? uciToPos(ev.pv[0]) : null;
             setState((s) => ({
@@ -118,7 +120,7 @@ export function useAnalysisBoard() {
     };
     run();
     return () => { cancelled = true; engineRef.current?.stop(); };
-  }, [engineReady, state.currentIndex, state.moves.length]);
+  }, [engineReady, state.currentIndex, state.moves.length, state.analysisVersion, depth]);
 
   // ── Select square / make move ────────────────────────────────────────
 
@@ -220,6 +222,7 @@ export function useAnalysisBoard() {
       isAnalyzing: false,
       bestMoveArrow: null,
       currentIndex: 0,
+      analysisVersion: 0,
     });
   }, []);
 
@@ -246,9 +249,8 @@ export function useAnalysisBoard() {
         lastMove,
         checkSide: isInCheck(board, turn) ? turn : null,
         lastMoveWasCapture: clamped > 0 ? !!prev.moves[clamped - 1].captured : false,
-        evaluation: null,
-        bestMoveArrow: null,
         currentIndex: clamped,
+        analysisVersion: prev.analysisVersion + 1,
       };
     });
   }, []);
@@ -272,9 +274,9 @@ export function useAnalysisBoard() {
 
 function posToUci(from: Position, to: Position): string {
   const fc = String.fromCharCode(97 + from.col);
-  const fr = 9 - from.row;
+  const fr = 10 - from.row;
   const tc = String.fromCharCode(97 + to.col);
-  const tr = 9 - to.row;
+  const tr = 10 - to.row;
   return `${fc}${fr}${tc}${tr}`;
 }
 
