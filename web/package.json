@@ -12,7 +12,6 @@
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
-    "@xiangqi/shared": "file:../shared",
     "clsx": "^2.1.1",
     "fairy-stockfish-nnue.wasm": "1.1.11",
     "framer-motion": "^12.35.0",
